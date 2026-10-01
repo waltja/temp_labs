@@ -6,10 +6,10 @@ module mux2to1_8 (
 );
 
 always @(*) begin
-    if (sel == 1'b0)
-        out = in0;
-    else
-        out = in1;
+    if (sel == 1'b0)
+        out = in0;
+    else
+        out = in1;
 end
 
 endmodule

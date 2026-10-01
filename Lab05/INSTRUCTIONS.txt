@@ -1,0 +1,43 @@
+./muxTest > mux_output.txt
+./RegisterFileTest > register_output.txt
+
+
+`muxTest.v`
+1. Create registers for `in0`, `in1`, and `sel`, plus a wire for the mux output.
+2. Create loop counters `i`, `j`, and `s`.
+3. Loop `s` through both select values: 0 and 1.
+4. For each select value, loop `in0` through all 256 possible 8-bit values.
+5. For each `in0`, loop `in1` through all 256 possible values.
+6. Apply those values to the mux and wait 5 ns.
+7. Check whether `out` equals `in0` when `sel=0` or `in1` when `sel=1`.
+8. Print `"ERROR!"` if the output is incorrect.
+
+`RegisterFile.v`
+1. Create 31 registers, each holding 64 bits: `registers[0:30]`.
+2. Create temporary 64-bit values `readA` and `readB` for the two read ports.
+3. On each positive clock edge, check `RegWr`.
+4. If `RegWr=1`, also check that `RW != 31`.
+5. If both are true, write `BusW` into `registers[RW]`.
+6. Continuously check the read address `RA`.
+7. If `RA=31`, make `readA=0`; otherwise read `registers[RA]`.
+8. Do the same for `RB` and `readB`.
+9. Send `readA` and `readB` to `BusA` and `BusB` after a 3 ns delay.
+10. Therefore, register 31 acts as XZR: it cannot be written and always reads as zero.
+
+`RegisterFileTest.v`
+1. Create the signals used to control and observe the register file.
+2. Create an `expected[0:30]` array to remember what value each register should contain.
+3. Generate a clock that flips every 5 ns.
+4. Initialize all control signals to zero.
+5. Loop through registers 0–30.
+6. Generate a random 64-bit value.
+7. Set `RW` to the current register, put the value on `BusW`, and enable `RegWr`.
+8. Wait for a positive clock edge so the value gets written.
+9. Save that same value in `expected[i]`.
+10. Disable writing, set `RA=i`, and read the register back.
+11. Compare `BusA` against `expected[i]` and report pass/error.
+12. Generate another random value but leave `RegWr=0`.
+13. Wait for another clock edge and verify the register did not change.
+14. After registers 0–30 are tested, attempt to write all 1s to register 31.
+15. Read register 31 through both `RA` and `RB`.
+16. Verify both outputs are still zero, confirming the XZR behavior.
