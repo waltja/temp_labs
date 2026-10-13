@@ -11,3 +11,18 @@ module ALU(
     input      [3:0]  ALUCtrl,
     output            Zero
 );
+
+always @* begin
+    case (ALUCtrl)
+        4'b0000: BusW = BusA & BusB;
+        4'b0001: BusW = BusA | BusB;
+        4'b0010: BusW = BusA + BusB;
+        4'b0110: BusW = BusA - BusB;
+        4'b0111: BusW = BusB;
+        default: BusW = 64'b0;
+    endcase
+end
+
+assign Zero = (BusW == 64'b0);
+
+endmodule
