@@ -1,0 +1,64 @@
+Lab 07 - Single-Cycle Processor
+===============================
+
+Run these commands from the Lab07 directory in a Linux/WSL terminal with
+Icarus Verilog (iverilog and vvp) and GTKWave installed. Commands from earlier
+OpenCode chats were not available in this workspace; these follow the local
+Lab05 convention of running compiled test programs from the terminal.
+If this Windows network-share folder is not visible inside WSL, copy the Lab07
+folder to the WSL filesystem or use the Linux mount path for the share first.
+
+1. Test the control unit
+-----------------------
+Compile and run the self-checking tests. The test covers every don't-care
+opcode combination for the supported instruction patterns, including ADDI
+and MOVZ, and checks unmatched opcodes return default controls.
+
+    iverilog -g2012 -s SingleCycleControlTest -o control_test.vvp SingleCycleControl.v SingleCycleControlTest.v
+    vvp control_test.vvp
+    gtkwave singlecyclecontrol.vcd
+
+The terminal should report "All control-unit tests passed". In GTKWave, inspect
+the opcode and control-signal transitions. Close GTKWave before running the
+processor test if you prefer a separate waveform window.
+
+2. Test the complete processor
+-----------------------------
+Compile all modules used by the top-level processor and its testbench:
+
+    iverilog -g2012 -s SingleCycleProcTest_v -o processor_test.vvp ALU.v DataMemory.v InstructionMemory.v NextPClogic.v RegisterFile.v SignExtender.v SingleCycleControl.v SingleCycleProc.v SingleCycleProcTest.v
+    vvp processor_test.vvp
+    gtkwave singlecycle.vcd
+
+Both programs must pass. Program 1 checks the original instruction set and
+must complete with result 0xF. Program 2 runs after Program 1 and must report
+"MOVZ/store/load Program 2 passed" with result 0x123456789abcdef0. It builds
+that value from four MOVZ instructions, combines the pieces with ORR, stores
+the result at byte address 0x28, and loads it into X10.
+
+3. Lab/demo checklist
+---------------------
+- Explain the control-unit defaults and opcode-to-control mappings, including
+  why an unsupported opcode does not write a register or memory.
+- Explain the top-level datapath connections, MOVZ shifted-immediate path, and
+  how the testbench checks both programs.
+- Show the passing terminal output and the VCD signals in GTKWave.
+- Keep the original Program 1 before Program 2 in the testbench; it verifies
+  the extension did not regress the original processor.
+- For the written MOVZ response, include the control signals and describe how
+  the immediate is shifted by 0, 16, 32, or 48 bits before ORR combines it.
+
+The hand-encoded Program 2 assembly is:
+
+    MOVZ X9,  0x1234, LSL #48
+    MOVZ X10, 0x5678, LSL #32
+    MOVZ X11, 0x9abc, LSL #16
+    MOVZ X12, 0xdef0
+    ORR  X9, X9, X10
+    ORR  X9, X9, X11
+    ORR  X9, X9, X12
+    STUR X9, [XZR, #0x28]
+    LDUR X10, [XZR, #0x28]
+
+If the shell cannot find iverilog, vvp, or gtkwave, install Icarus Verilog and
+GTKWave in the Linux/WSL environment, then reopen the terminal and retry.

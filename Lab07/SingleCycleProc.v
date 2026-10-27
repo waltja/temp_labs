@@ -30,7 +30,7 @@ module SingleCycleProc(
    wire 			     MemWrite;
    wire 			     Branch;
    wire 			     Uncondbranch;
-   wire [3:0] 			     ALUop;
+   wire [3:0] 			     ALUOp;
    wire [1:0] 			     SignOp;
 
    // Register file connections
@@ -64,7 +64,7 @@ module SingleCycleProc(
 			  .Address(currentpc)
 			  );
 
-   control SingleCycleControl(
+    SC_Control SingleCycleControl(
 		   .Reg2Loc(Reg2Loc),
 		   .ALUSrc(ALUSrc),
 		   .MemtoReg(MemtoReg),
@@ -78,12 +78,60 @@ module SingleCycleProc(
 		   .opcode(opcode)
 		   );
 
-   /*
-    * Connect the remaining datapath elements below.
-    * Do not forget any additional multiplexers that may be required.
-    */
+   wire [63:0] aluInputB;
+   wire [63:0] memoryData;
+   wire [63:0] writebackData;
+   wire [63:0] movzImmediate;
+   wire isMovz;
 
+   assign isMovz = (opcode[10:2] == 9'b110100101);
+   assign movzImmediate = {48'b0, instruction[20:5]} << (16 * instruction[22:21]);
+   assign aluInputB = isMovz ? movzImmediate : (ALUSrc ? extimm : regoutB);
+   assign writebackData = MemtoReg ? memoryData : aluout;
+   assign MemtoRegOut = writebackData;
 
+   RegisterFile registers(
+      .BusA(regoutA),
+      .BusB(regoutB),
+      .BusW(writebackData),
+      .RA(rm),
+      .RB(rn),
+      .RW(rd),
+      .RegWr(RegWrite),
+      .Clk(CLK)
+   );
+
+   SignExtender signExtend(
+      .SignExOut(extimm),
+      .Instruction(instruction[25:0]),
+      .SignOp(SignOp)
+   );
+
+   ALU alu(
+      .BusW(aluout),
+      .BusA(regoutA),
+      .BusB(aluInputB),
+      .ALUCtrl(ALUOp),
+      .Zero(zero)
+   );
+
+   DataMemory dataMemory(
+      .ReadData(memoryData),
+      .Address(aluout),
+      .WriteData(regoutB),
+      .MemoryRead(MemRead),
+      .MemoryWrite(MemWrite),
+      .Clock(CLK)
+   );
+
+   NextPClogic nextPCLogic(
+      .NextPC(nextpc),
+      .CurrentPC(currentpc),
+      .SignExtImm64(extimm),
+      .Branch(Branch),
+      .ALUZero(zero),
+      .Uncondbranch(Uncondbranch)
+   );
 
 endmodule
 

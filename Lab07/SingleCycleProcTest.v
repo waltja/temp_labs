@@ -43,7 +43,7 @@ module SingleCycleProcTest_v;
    wire [63:0] 	  currentPC;
 
    // Instantiate the Unit Under Test (UUT)
-   singlecycle uut (
+   SingleCycleProc uut (
 		    .CLK(CLK),
 		    .reset(Reset),
 		    .startpc(startPC),
@@ -87,13 +87,23 @@ module SingleCycleProcTest_v;
         end
       passTest(MemtoRegOut, 64'hF, "Results of Program 1", passed);
 
-      // ***********************************************************
-      // Add your new tests here
-      // ***********************************************************
+      // Program 2 starts after the original regression program.
+      #1 Reset = 1; startPC = 64'h34;
+      @(posedge CLK);
+      @(negedge CLK);
+      Reset = 0;
+
+      while (currentPC < 64'h58)
+        begin
+           @(posedge CLK);
+           @(negedge CLK);
+           $display("CurrentPC:%h", currentPC);
+        end
+      passTest(MemtoRegOut, 64'h123456789abcdef0,
+               "MOVZ/store/load Program 2", passed);
 
       // Done
-      allPassed(passed, 2);   // Be sure to change the one to match
-      // the number of tests you add.
+      allPassed(passed, 2);
       $finish;
    end
 
