@@ -92,16 +92,19 @@ module SingleCycleProcTest_v;
       @(posedge CLK);
       @(negedge CLK);
       Reset = 0;
+      $display("CurrentPC:%h", currentPC);
 
-      while (currentPC < 64'h58)
+      while (currentPC < 64'h54)
         begin
            @(posedge CLK);
            @(negedge CLK);
            $display("CurrentPC:%h", currentPC);
         end
+      $display("CurrentPC:%h", currentPC);
       passTest(MemtoRegOut, 64'h123456789abcdef0,
                "MOVZ/store/load Program 2", passed);
 
+      @(posedge CLK);
       // Done
       allPassed(passed, 2);
       $finish;
