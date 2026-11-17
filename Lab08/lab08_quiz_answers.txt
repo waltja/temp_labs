@@ -1,0 +1,74 @@
+ECEN 350 Lab 08 Quiz: Multi-level Caching and Processor Simulation Studies
+
+Question 1:
+
+Full-run output:
+
+L1I hit rate: 100% (5,495,437 hits / 5,495,437 accesses).
+L1D hit rate: 98.746% (6,583,059 hits / 6,666,667 accesses).
+L2C hit rate: 20.026% (16,794 hits / 83,860 accesses).
+LLC hit rate: 99.991% (67,097 hits / 67,103 accesses).
+IPC: 1.148 (20,000,003 instructions / 17,427,299 cycles).
+
+Question 2:
+
+L1D doubled: 64 KiB, 4-way, 3-cycle latency, 64-byte blocks, 256 sets.
+L2C doubled: 256 KiB, 8-way, 12-cycle latency, 64-byte blocks, 512 sets.
+LLC doubled: 2 MiB, 16-way, 27-cycle latency, 64-byte blocks, 2048 sets.
+
+Measured IPC and speedup (baseline IPC 1.147625):
+
+L1D doubled: IPC 1.142014; speedup 1.142014 / 1.147625 = 0.9951x (-0.49%).
+L2C doubled: IPC 1.200322; speedup 1.200322 / 1.147625 = 1.0459x (+4.59%).
+LLC doubled: IPC 1.130305; speedup 1.130305 / 1.147625 = 0.9849x (-1.51%).
+
+Best configuration: Double L2C to 256 KiB (512 sets, 8 ways) and increase
+its latency from 8 to 12 cycles. It gives the highest IPC, 1.200322, and a
+1.0459x speedup over baseline.
+
+------------------------------------
+
+Configuration:
+- Cache capacity = sets x ways x block size. With 64-byte blocks, the
+  baseline L1I and L1D are each 128 x 4 x 64 = 32 KiB; L2C is
+  256 x 8 x 64 = 128 KiB; LLC is 1024 x 16 x 64 = 1 MiB.
+- The baseline latencies are L1I 2 cycles, L1D 2, L2C 8, and LLC 18.
+- Each Q2 experiment doubles only one cache's sets, preserving its ways and
+  block size. Its latency rises by 50%: L1D 2 to 3, L2C 8 to 12, or LLC
+  18 to 27 cycles.
+
+How to explain the counters:
+- ACCESS is the number of requests seen by that cache. HIT requests are
+  satisfied there; MISS requests continue to the next level. A lower cache
+  therefore sees misses from above, not every original CPU request.
+- Hit rate = HIT / ACCESS. For example, baseline L2C hit rate is
+  16,794 / 83,860 = 20.026%.
+- IPC = retired instructions / cycles. Higher IPC means more instructions
+  completed per cycle. Compare each experiment's IPC with the baseline.
+
+Selected full-run output (counts are ACCESS / HIT / MISS):
+
+Baseline:
+  CPU 0 cumulative IPC: 1.148 instructions: 20000003 cycles: 17427299
+  cpu0_L1I TOTAL ACCESS: 5495437 HIT: 5495437 MISS: 0
+  cpu0_L1D TOTAL ACCESS: 6666667 HIT: 6583059 MISS: 83608
+  cpu0_L2C TOTAL ACCESS: 83860 HIT: 16794 MISS: 67066
+  cpu0->LLC TOTAL ACCESS: 67103 HIT: 67097 MISS: 6
+
+L1D doubled:
+  CPU 0 cumulative IPC: 1.142 instructions: 20000003 cycles: 17512916
+  cpu0_L1D TOTAL ACCESS: 6666667 HIT: 6583169 MISS: 83498
+
+L2C doubled:
+  CPU 0 cumulative IPC: 1.2 instructions: 20000002 cycles: 16662196
+  cpu0_L2C TOTAL ACCESS: 83860 HIT: 83854 MISS: 6
+
+LLC doubled:
+  CPU 0 cumulative IPC: 1.13 instructions: 20000003 cycles: 17694340
+  cpu0->LLC TOTAL ACCESS: 67103 HIT: 67097 MISS: 6
+
+Takeaway: The workload has many L2C misses but almost all are served by the
+LLC. Doubling L2C makes nearly all those requests hit in L2C, reducing the
+LLC requests from about 67,000 to 6. That outweighs the L2C latency increase.
+Doubling L1D barely changes its miss count, and doubling LLC does not change
+the LLC hit/miss counts, so the added latency hurts both alternatives.

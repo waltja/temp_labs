@@ -1,0 +1,37 @@
+ECEN 350 Lab 08 Prelab: Introduction to Caching
+
+Question 1
+Cache capacity = number of sets * associativity * block size
+             = 128 * 8 * 128 bytes
+             = 131072 bytes (128 KiB)
+
+Question 2
+The supplied Lab 01 code declares A and B as int[50000] and C as
+long long[50000]. Assuming 4-byte int and 8-byte long long:
+
+A: 50000 * 4 = 200000 bytes.
+B: 50000 * 4 = 200000 bytes.
+C: 50000 * 8 = 400000 bytes.
+Total: 800000 bytes (781.25 KiB).
+
+The quiz wording says all three arrays are long long int, which conflicts with
+the supplied code. If all three arrays were intended to be long long, the
+total would instead be 3 * 50000 * 8 = 1200000 bytes (about 1.14 MiB).
+
+Question 3
+Using the default ChampSim configuration's 64-byte block size:
+
+L1I: 64 sets * 8 ways * 64 bytes = 32768 bytes = 32 KiB; latency 4 cycles.
+L1D: 64 sets * 12 ways * 64 bytes = 49152 bytes = 48 KiB; latency 5 cycles.
+L2C: 1024 sets * 8 ways * 64 bytes = 524288 bytes = 512 KiB; latency 10 cycles.
+LLC: 2048 sets * 16 ways * 64 bytes = 2097152 bytes = 2 MiB; latency 20 cycles.
+
+Question 4
+The complete edited version of ChampSim's built-in configuration is in
+champsim_config_lab08.json, in this directory. All non-cache settings are
+preserved from the built-in config. It sets the block size to 64 bytes and:
+
+L1I: 32 KiB, 4-way, 2-cycle latency (128 sets).
+L1D: 32 KiB, 4-way, 2-cycle latency (128 sets).
+L2C: 128 KiB, 8-way, 8-cycle latency (256 sets).
+LLC: 1 MiB, 16-way, 18-cycle latency (1024 sets).
